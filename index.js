@@ -1,13 +1,14 @@
-const { Engine, Render, Runner, World, Bodies } = Matter;
+const { Engine, Render, Runner, World, Bodies, Body, Events } = Matter;
 
-const cells = 3;
-const width = 600;
-const height = 600;
+const cells = 5;
+const width = window.innerWidth;
+const height = window.innerHeight;
 const wallThickness = 2;
 
 const unitLength = width / cells;
 
 const engine = Engine.create();
+engine.world.gravity.y = 0;
 const { world } = engine;
 const render = Render.create({
   element: document.body,
@@ -22,18 +23,22 @@ const render = Render.create({
 Render.run(render);
 Runner.run(Runner.create(), engine);
 
-// walls
+// borders
 const walls = [
   Bodies.rectangle(width / 2, 0, width, wallThickness * 2, {
+    label: 'border',
     isStatic: true,
   }),
   Bodies.rectangle(width / 2, height, width, wallThickness * 2, {
+    label: 'border',
     isStatic: true,
   }),
   Bodies.rectangle(0, height / 2, wallThickness * 2, height, {
+    label: 'border',
     isStatic: true,
   }),
   Bodies.rectangle(width, height / 2, wallThickness * 2, height, {
+    label: 'border',
     isStatic: true,
   }),
 ];
@@ -137,6 +142,7 @@ horizontals.forEach((row, rowIndex) => {
       unitLength,
       wallThickness,
       {
+        label: 'wall',
         isStatic: true,
       },
     );
@@ -154,6 +160,7 @@ verticals.forEach((row, rowIndex) => {
       wallThickness,
       unitLength,
       {
+        label: 'wall',
         isStatic: true,
       },
     );
@@ -169,14 +176,39 @@ const goal = Bodies.rectangle(
   unitLength * 0.7,
   {
     isStatic: true,
+    label: 'goal',
   },
 );
 World.add(world, goal);
 
 // ball shape
 const ball = Bodies.circle(unitLength / 2, unitLength / 2, unitLength / 4, {
-  isStatic: true,
+  label: 'ball',
 });
 World.add(world, ball);
 
+// keypress events
+document.addEventListener('keydown', (event) => {
+  const { x, y } = ball.velocity;
+  if (event.keyCode === 87) Body.setVelocity(ball, { x, y: y - 5 });
+  if (event.keyCode === 68) Body.setVelocity(ball, { x: x + 5, y });
+  if (event.keyCode === 83) Body.setVelocity(ball, { x, y: y + 5 });
+  if (event.keyCode === 65) Body.setVelocity(ball, { x: x - 5, y });
+});
 
+// win condition
+Events.on(engine, 'collisionStart', (event) => {
+  event.pairs.forEach((collision) => {
+    const labels = ['ball', 'goal'];
+    if (
+      labels.includes(collision.bodyA.label) &&
+      labels.includes(collision.bodyB.label)
+    ) {
+      console.log('win');
+      world.gravity.y = 1;
+      world.bodies.forEach((el) => {
+        if (el.label === 'wall') Body.setStatic(el, false);
+      });
+    }
+  });
+});
