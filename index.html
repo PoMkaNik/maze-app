@@ -18,8 +18,54 @@
     <style>
       body {
         margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .hidden {
+        display: none !important;
+      }
+      h1 {
+        font-size: 72px;
+        color: #fff;
+      }
+      .winner {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        z-index: 1;
+        height: 100vh;
+        width: 100wh;
+      }
+      .btn {
+        font-size: 24px;
+        display: block;
+        color: white;
+        text-transform: uppercase;
+        background-color: green;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        outline: none;
+        transition: all 0.4s ease 0s;
+      }
+      .btn:hover {
+        background: orangered;
+        letter-spacing: 1px;
+        -webkit-box-shadow: 0px 5px 40px -10px rgba(0, 0, 0, 0.57);
+        -moz-box-shadow: 0px 5px 40px -10px rgba(0, 0, 0, 0.57);
+        box-shadow: 5px 40px -10px rgba(0, 0, 0, 0.57);
+        transition: all 0.4s ease 0s;
       }
     </style>
   </head>
-  <body></body>
+  <body>
+    <div class="winner hidden">
+      <h1>You Win!</h1>
+      <button class="btn">Start New Game!</button>
+    </div>
+  </body>
 </html>

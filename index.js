@@ -1,11 +1,14 @@
 const { Engine, Render, Runner, World, Bodies, Body, Events } = Matter;
 
-const cells = 5;
-const width = window.innerWidth;
-const height = window.innerHeight;
+const cellsHorizontal = 4;
+const cellsVertical = 3;
+// 0.99 used to remove scrollbars
+const width = window.innerWidth * 0.99;
+const height = window.innerHeight * 0.99;
 const wallThickness = 2;
 
-const unitLength = width / cells;
+const unitLengthX = width / cellsHorizontal;
+const unitLengthY = height / cellsVertical;
 
 const engine = Engine.create();
 engine.world.gravity.y = 0;
@@ -14,7 +17,7 @@ const render = Render.create({
   element: document.body,
   engine,
   options: {
-    wireframes: true,
+    wireframes: false,
     width,
     height,
   },
@@ -25,21 +28,33 @@ Runner.run(Runner.create(), engine);
 
 // borders
 const walls = [
-  Bodies.rectangle(width / 2, 0, width, wallThickness * 2, {
+  Bodies.rectangle(width / 2, 0, width, wallThickness * 3, {
     label: 'border',
     isStatic: true,
+    render: {
+      fillStyle: 'red',
+    },
   }),
-  Bodies.rectangle(width / 2, height, width, wallThickness * 2, {
+  Bodies.rectangle(width / 2, height, width, wallThickness * 3, {
     label: 'border',
     isStatic: true,
+    render: {
+      fillStyle: 'red',
+    },
   }),
-  Bodies.rectangle(0, height / 2, wallThickness * 2, height, {
+  Bodies.rectangle(0, height / 2, wallThickness * 3, height, {
     label: 'border',
     isStatic: true,
+    render: {
+      fillStyle: 'red',
+    },
   }),
-  Bodies.rectangle(width, height / 2, wallThickness * 2, height, {
+  Bodies.rectangle(width, height / 2, wallThickness * 3, height, {
     label: 'border',
     isStatic: true,
+    render: {
+      fillStyle: 'red',
+    },
   }),
 ];
 World.add(world, walls);
@@ -63,23 +78,23 @@ const shuffle = (arr) => {
   return arr;
 };
 
-const grid = Array(cells)
+const grid = Array(cellsVertical)
   // can't use .fill([false, false, false]
   // because will be created one array and will be put in each row
   // if we change one raw -> all raws will be affected
   .fill(null)
-  .map(() => Array(cells).fill(false));
+  .map(() => Array(cellsHorizontal).fill(false));
 
-const verticals = Array(cells)
+const verticals = Array(cellsVertical)
   .fill(null)
-  .map(() => Array(cells - 1).fill(false));
+  .map(() => Array(cellsHorizontal - 1).fill(false));
 
-const horizontals = Array(cells - 1)
+const horizontals = Array(cellsVertical - 1)
   .fill(null)
-  .map(() => Array(cells).fill(false));
+  .map(() => Array(cellsHorizontal).fill(false));
 
-const startRow = Math.floor(Math.random() * cells);
-const startColumn = Math.floor(Math.random() * cells);
+const startRow = Math.floor(Math.random() * cellsVertical);
+const startColumn = Math.floor(Math.random() * cellsHorizontal);
 
 const stepThroughCell = (row, column) => {
   // if i have visited the cell at [row, column] -> return
@@ -99,9 +114,9 @@ const stepThroughCell = (row, column) => {
     // see if that neighbor is out of zone (after the wall)
     if (
       nextRow < 0 ||
-      nextRow >= cells ||
+      nextRow >= cellsVertical ||
       nextColumn < 0 ||
-      nextColumn >= cells
+      nextColumn >= cellsHorizontal
     ) {
       // skip that neighbors
       continue;
@@ -137,13 +152,16 @@ horizontals.forEach((row, rowIndex) => {
     if (open) return;
 
     const wall = Bodies.rectangle(
-      columnIndex * unitLength + unitLength / 2,
-      rowIndex * unitLength + unitLength,
-      unitLength,
+      columnIndex * unitLengthX + unitLengthX / 2,
+      rowIndex * unitLengthY + unitLengthY,
+      unitLengthX,
       wallThickness,
       {
         label: 'wall',
         isStatic: true,
+        render: {
+          fillStyle: 'red',
+        },
       },
     );
     World.add(world, wall);
@@ -155,13 +173,16 @@ verticals.forEach((row, rowIndex) => {
     if (open) return;
 
     const wall = Bodies.rectangle(
-      columnIndex * unitLength + unitLength,
-      rowIndex * unitLength + unitLength / 2,
+      columnIndex * unitLengthX + unitLengthX,
+      rowIndex * unitLengthY + unitLengthY / 2,
       wallThickness,
-      unitLength,
+      unitLengthY,
       {
         label: 'wall',
         isStatic: true,
+        render: {
+          fillStyle: 'red',
+        },
       },
     );
     World.add(world, wall);
@@ -170,21 +191,32 @@ verticals.forEach((row, rowIndex) => {
 
 // goal shape
 const goal = Bodies.rectangle(
-  width - unitLength / 2,
-  height - unitLength / 2,
-  unitLength * 0.7,
-  unitLength * 0.7,
+  width - unitLengthX / 2,
+  height - unitLengthY / 2,
+  unitLengthX * 0.7,
+  unitLengthY * 0.7,
   {
     isStatic: true,
     label: 'goal',
+    render: {
+      fillStyle: 'green',
+    },
   },
 );
 World.add(world, goal);
 
 // ball shape
-const ball = Bodies.circle(unitLength / 2, unitLength / 2, unitLength / 4, {
-  label: 'ball',
-});
+const ball = Bodies.circle(
+  unitLengthX / 2,
+  unitLengthY / 2,
+  Math.min(unitLengthX, unitLengthY) / 4,
+  {
+    label: 'ball',
+    render: {
+      fillStyle: 'lightblue',
+    },
+  },
+);
 World.add(world, ball);
 
 // keypress events
@@ -204,7 +236,10 @@ Events.on(engine, 'collisionStart', (event) => {
       labels.includes(collision.bodyA.label) &&
       labels.includes(collision.bodyB.label)
     ) {
-      console.log('win');
+      document.querySelector('.winner').classList.remove('hidden');
+      document.querySelector('.btn').addEventListener('click', () => {
+        location.reload();
+      });
       world.gravity.y = 1;
       world.bodies.forEach((el) => {
         if (el.label === 'wall') Body.setStatic(el, false);
